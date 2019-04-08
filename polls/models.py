@@ -4,88 +4,103 @@ from django import forms
 # Create your models here.
 
  
+from django.db import models
 
-class Etudiant(models.Model):
-
+class Student(models.Model):
 	first_name = models.CharField(max_length=30)
 	last_name = models.CharField(max_length=30)
+	email = models.EmailField(max_length=50, default='')
 	age = models.IntegerField()
-	email = models.EmailField(max_length=70,blank=True)
-    
+	code = models.CharField(max_length=5)
 	def __str__(self):
-		return self.first_name
-
-	 
-
-
-class Teacher (models.Model):
+		return self.first_name + ' ' + self.last_name
+	#group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
 
+
+class Teacher(models.Model):
 	first_name = models.CharField(max_length=30)
 	last_name = models.CharField(max_length=30)
-	password = models.CharField(max_length=100)
-	email = models.EmailField(max_length=70,blank=True)
-	specialty = models.CharField(max_length=100)
-	experience = models.IntegerField()
-	#phone_Number = models.CharField(max_length=120)
-
-
-	def __str__(self):
-		return self.first_name
-
-	
-
-
-class Exercise (models.Model):
-	acceder = models.ManyToManyField(Etudiant, through='Membership')
-	Énoncé= models.CharField(max_length=100)
-	body = forms.CharField(widget= forms.Textarea, label="description",required=True)
-	description = models.TextField()
-
-	Fill_in_the_Blank = 'R1'
-	Multi_Option_Format ='R2'
-	writing ='R3'
-	Correct_the_answer ='R4'
-	EXERCISE_TYPE = (
-    (Fill_in_the_Blank, 'Fill in the Blank'),
-    (Multi_Option_Format, 'Multi Option Format'),
-	(writing, 'writing'),
-	(Correct_the_answer, 'Correct the answer')
+	email = models.EmailField(max_length=50)
+	password = models.CharField(max_length=50)
+	experience = models.IntegerField(default=0)
+	#course = models.ForeignKey(Cours, on_delete=models.CASCADE)
+	specilization = models.CharField(
+		max_length=10,
+		choices=(
+			('math', 'Math'), ('physics', 'Physics'), ('arts', 'Arts')
+		),
+		default='math'
 	)
-	type_of_exercise = models.CharField(max_length=1, choices=EXERCISE_TYPE, default=Fill_in_the_Blank)
 
-
-
-	Exercise_1 = 'E1'
-	Exercise_2 ='E2'
-	Exercise_3 ='E3'
-	Exercise_4 ='E4'
-	EXERCISE_TYPE_CHOICES = (
-    (Exercise_1, 'Exercise 1'),
-    (Exercise_2, 'Exercise 2'),
-	(Exercise_3, 'Exercise 3'),
-	(Exercise_4, 'Exercise 4')
-	)
-	select_an_exercise = models.CharField(max_length=1, choices=EXERCISE_TYPE_CHOICES, default=Exercise_1)
-
-
-
-	easy = 'E'
-	medium ='M'
-	difficult ='D'
-	exercise_level_choices = (
-    (easy, 'Easy'),
-    (medium, 'Medium'),
-	(difficult, 'Difficult')
-	)
-	exercise_level = models.CharField(max_length=1, choices=exercise_level_choices ,default=easy)
-
-	def __str__(self):
-		return self.acceder
-	
  
-class Membership (models.Model):
-	
-	etudiant = models.ForeignKey(Etudiant, on_delete=models.CASCADE)
+	def __str__(self):
+		return self.first_name + ' ' + self.last_name + ' | ' + self.specilization
+
+class Exercise(models.Model):
+	author = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+	text = models.CharField(max_length=200)
+	choices = models.CharField(max_length=100)
+	difficulty = models.IntegerField(
+		choices=((1, 'easy'), (2, 'medium'), (3, 'hard')),
+		default=1
+	)
+	# forein key to test
+
+
+	def __str__(self):
+		return self.text
+
+class individual_Assignment(models.Model):
+	student = models.ForeignKey(Student, on_delete=models.CASCADE)
 	exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
- 	
+
+
+	def __str__(self):
+		return self.student.first_name + ' working on ' + self.exercise.text 
+
+	
+
+class Cours(models.Model):
+	description = models.CharField(max_length=200)
+	objectives = models.CharField(max_length=200)
+	room = models.CharField(max_length=50)
+	day = models.CharField(max_length=10)
+	start_time = models.CharField(max_length=10)
+	end_time = models.CharField(max_length=10)
+	def __str__(self):
+		return 'this course is beginning at ' + self.start_time + ' and will be finished at ' + self.end_time
+ 	# teacher
+	# description
+	# objectives
+	# room
+	# dates
+	# start date
+	# end date
+
+class Group(models.Model):
+	name = models.CharField(max_length=30)
+	level = models.CharField(max_length=30)
+	def __str__(self):
+		return self.name + ' and level ' + self.level
+
+
+class Enrollment(models.Model):
+	cours = models.ForeignKey(Cours, on_delete=models.CASCADE)
+	group = models.ForeignKey(Group, on_delete=models.CASCADE)
+
+
+class Test(models.Model):
+	test = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+	date = models.CharField(max_length=10)
+	coeficient = models.FloatField(null=True, blank=True, default=None)
+	Test_type = models.CharField(max_length=30)
+	def __str__(self):
+		return 'Test of ' + self.test.specilization + ' created by ' + self.test.first_name + ' ' + self.test.last_name 
+	
+class Group_Assignment(models.Model):
+	test = models.ForeignKey(Test, on_delete=models.CASCADE)
+	group = models.ForeignKey(Group, on_delete=models.CASCADE)
+	def __str__(self):
+		return self.group.name + ' take a test at ' + self.test.date 
+	 
